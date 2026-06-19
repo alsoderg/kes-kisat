@@ -20,6 +20,7 @@ export default function App() {
   // scores[stationId][playerId] = { points: number, style: number }
   const [scores, setScores] = usePersistentState("scores", {});
   const [discordWebhookUrl, setDiscordWebhookUrl] = usePersistentState("discordWebhookUrl", "");
+  const [startTime, setStartTime] = usePersistentState("startTime", "");
   const [isAdmin, setIsAdmin] = usePersistentState("isAdmin", false);
   const [tab, setTab] = useState("register");
 
@@ -117,6 +118,24 @@ export default function App() {
 
   function sendKickoffAnnouncement() {
     return postToDiscord("@everyone KESÄKISAT ALKAA KOHTA 🏆☀️", { mentionEveryone: true });
+  }
+
+  function sendStartTimeAnnouncement() {
+    if (!startTime) {
+      alert("Aseta ensin alkamisaika.");
+      return;
+    }
+    const formatted = new Date(startTime).toLocaleString("fi-FI", {
+      weekday: "long",
+      day: "numeric",
+      month: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    return postToDiscord(
+      `🎉☀️ **Allun Kesäkisat** käynnistyvät **${formatted}**! Laita kalenteriin ja ota aurinkolasit mukaan 😎🏆`,
+      { mentionEveryone: true }
+    );
   }
 
   function shareStandingsToDiscord() {
@@ -258,6 +277,9 @@ export default function App() {
             discordWebhookUrl={discordWebhookUrl}
             onSetDiscordWebhookUrl={setDiscordWebhookUrl}
             onSendKickoffAnnouncement={sendKickoffAnnouncement}
+            startTime={startTime}
+            onSetStartTime={setStartTime}
+            onSendStartTimeAnnouncement={sendStartTimeAnnouncement}
             onExportBackup={exportBackupToFile}
             onSendBackupToDiscord={sendBackupToDiscord}
             onImportBackup={importBackupFromFile}
