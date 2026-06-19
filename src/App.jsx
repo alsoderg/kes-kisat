@@ -81,11 +81,29 @@ export default function App() {
     setStations((prev) => prev.filter((s) => s.id !== id));
   }
 
-  async function shareStationToDiscord(station) {
+  async function postToDiscord(content, { mentionEveryone = false } = {}) {
     if (!discordWebhookUrl) {
       alert("Discord-webhook ei ole asetettu. Aseta se admin-tilassa Rekisteröinti-välilehdellä.");
       return false;
     }
+    try {
+      const res = await fetch(discordWebhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content,
+          allowed_mentions: { parse: mentionEveryone ? ["everyone"] : [] },
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return true;
+    } catch (err) {
+      alert("Discordiin jakaminen epäonnistui: " + err.message);
+      return false;
+    }
+  }
+
+  function shareStationToDiscord(station) {
     const stationScores = scores[station.id] ?? {};
     const lines = players.map((p) => {
       const s = stationScores[p.id] ?? { points: 0, style: 0 };
@@ -94,18 +112,11 @@ export default function App() {
       return `**${p.name}**: ${pts} pistettä, ${sty} tyylipistettä (yht. ${pts + sty})`;
     });
     const content = `📣 **${station.name}** tulokset:\n${lines.join("\n") || "Ei tuloksia."}`;
-    try {
-      const res = await fetch(discordWebhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content }),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return true;
-    } catch (err) {
-      alert("Discordiin jakaminen epäonnistui: " + err.message);
-      return false;
-    }
+    return postToDiscord(content);
+  }
+
+  function sendKickoffAnnouncement() {
+    return postToDiscord("@everyone KESÄKISAT ALKAA KOHTA 🏆☀️", { mentionEveryone: true });
   }
 
   function resetAll() {
@@ -169,6 +180,7 @@ export default function App() {
             onRemoveStation={removeStation}
             discordWebhookUrl={discordWebhookUrl}
             onSetDiscordWebhookUrl={setDiscordWebhookUrl}
+            onSendKickoffAnnouncement={sendKickoffAnnouncement}
           />
         )}
         {tab === "competition" && (

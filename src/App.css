@@ -249,6 +249,12 @@ button {
   margin: 0;
 }
 
+.kickoff-btn {
+  margin-top: 10px;
+  width: 100%;
+  background: #fb8500;
+}
+
 .share-btn {
   border: none;
   background: #5865f2;

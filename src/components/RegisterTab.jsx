@@ -10,6 +10,7 @@ export default function RegisterTab({
   onRemoveStation,
   discordWebhookUrl,
   onSetDiscordWebhookUrl,
+  onSendKickoffAnnouncement,
 }) {
   const [name, setName] = useState("");
   const [stationName, setStationName] = useState("");
@@ -117,7 +118,14 @@ export default function RegisterTab({
             />
             <button type="submit">Tallenna webhook</button>
           </form>
-          {discordWebhookUrl && <p className="player-count">✅ Webhook asetettu.</p>}
+          {discordWebhookUrl && (
+            <>
+              <p className="player-count">✅ Webhook asetettu.</p>
+              <button className="share-btn kickoff-btn" onClick={onSendKickoffAnnouncement}>
+                🚨 Lähetä "Kesäkisat alkaa kohta"
+              </button>
+            </>
+          )}
         </section>
       )}
     </div>
