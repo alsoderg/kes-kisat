@@ -21,6 +21,7 @@ export default function App() {
   const [scores, setScores] = usePersistentState("scores", {});
   const [discordWebhookUrl, setDiscordWebhookUrl] = usePersistentState("discordWebhookUrl", "");
   const [startTime, setStartTime] = usePersistentState("startTime", "");
+  const [location, setLocation] = usePersistentState("location", "");
   const [isAdmin, setIsAdmin] = usePersistentState("isAdmin", false);
   const [tab, setTab] = useState("register");
 
@@ -132,8 +133,9 @@ export default function App() {
       hour: "2-digit",
       minute: "2-digit",
     });
+    const locationLine = location ? `\n📍 Paikka: **${location}**` : "";
     return postToDiscord(
-      `🎉☀️ **Allun Kesäkisat** käynnistyvät **${formatted}**! Laita kalenteriin ja ota aurinkolasit mukaan 😎🏆`,
+      `🎉☀️ **Allun Kesäkisat** käynnistyvät **${formatted}**!${locationLine}\nLaita kalenteriin ja ota aurinkolasit mukaan 😎🏆`,
       { mentionEveryone: true }
     );
   }
@@ -279,6 +281,8 @@ export default function App() {
             onSendKickoffAnnouncement={sendKickoffAnnouncement}
             startTime={startTime}
             onSetStartTime={setStartTime}
+            location={location}
+            onSetLocation={setLocation}
             onSendStartTimeAnnouncement={sendStartTimeAnnouncement}
             onExportBackup={exportBackupToFile}
             onSendBackupToDiscord={sendBackupToDiscord}

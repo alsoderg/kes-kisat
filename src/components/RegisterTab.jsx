@@ -13,6 +13,8 @@ export default function RegisterTab({
   onSendKickoffAnnouncement,
   startTime,
   onSetStartTime,
+  location,
+  onSetLocation,
   onSendStartTimeAnnouncement,
   onExportBackup,
   onSendBackupToDiscord,
@@ -137,13 +139,19 @@ export default function RegisterTab({
 
       {isAdmin && (
         <section className="card">
-          <h2>Alkamisaika (admin) ⏰</h2>
-          <p className="station-desc">Aseta kisojen alkamisaika ja ilmoita siitä iloisesti Discordiin.</p>
+          <h2>Alkamisaika & paikka (admin) ⏰</h2>
+          <p className="station-desc">Aseta kisojen alkamisaika ja paikka, ja ilmoita niistä iloisesti Discordiin.</p>
           <div className="stack-form">
             <input
               type="datetime-local"
               value={startTime}
               onChange={(e) => onSetStartTime(e.target.value)}
+            />
+            <input
+              type="text"
+              placeholder="Paikka (esim. Allun mökki, Kesäkuja 1)"
+              value={location}
+              onChange={(e) => onSetLocation(e.target.value)}
             />
             {discordWebhookUrl && (
               <button className="share-btn kickoff-btn" onClick={onSendStartTimeAnnouncement}>
