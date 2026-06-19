@@ -119,6 +119,17 @@ export default function App() {
     return postToDiscord("@everyone KESÄKISAT ALKAA KOHTA 🏆☀️", { mentionEveryone: true });
   }
 
+  function shareStandingsToDiscord() {
+    const sorted = [...totals].sort((a, b) => b.total - a.total);
+    const medals = ["🥇", "🥈", "🥉"];
+    const lines = sorted.map((row, i) => {
+      const medal = medals[i] ?? `${i + 1}.`;
+      return `${medal} **${row.name}** — ${row.total} p. (${row.points} pistettä + ${row.style} tyyliä)`;
+    });
+    const content = `🏆 **Kesäkisojen tilanne:**\n${lines.join("\n") || "Ei osallistujia."}`;
+    return postToDiscord(content);
+  }
+
   function resetAll() {
     if (!window.confirm("Nollataanko kaikki osallistujat, pisteet ja rastien tila? Tätä ei voi perua.")) return;
     setPlayers([]);
@@ -126,6 +137,7 @@ export default function App() {
     setCurrentStationIndex(0);
     setScores({});
     clearAllPersistedState();
+    setIsAdmin(false);
     setTab("register");
   }
 
@@ -198,7 +210,16 @@ export default function App() {
             discordWebhookUrl={discordWebhookUrl}
           />
         )}
-        {tab === "stats" && <StatsTab players={players} stations={stations} scores={scores} totals={totals} />}
+        {tab === "stats" && (
+          <StatsTab
+            players={players}
+            stations={stations}
+            scores={scores}
+            totals={totals}
+            discordWebhookUrl={discordWebhookUrl}
+            onShareStandings={shareStandingsToDiscord}
+          />
+        )}
       </main>
     </div>
   );

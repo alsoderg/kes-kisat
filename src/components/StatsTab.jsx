@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 
-export default function StatsTab({ players, stations, scores, totals }) {
+export default function StatsTab({ players, stations, scores, totals, discordWebhookUrl, onShareStandings }) {
   const [sortKey, setSortKey] = useState("total");
   const [sortDir, setSortDir] = useState("desc");
   const [stationFilter, setStationFilter] = useState("all");
@@ -47,7 +47,14 @@ export default function StatsTab({ players, stations, scores, totals }) {
   return (
     <div className="card-stack">
       <section className="card">
-        <h2>Kokonaistilanne 🏆</h2>
+        <div className="station-header">
+          <h2>Kokonaistilanne 🏆</h2>
+          {discordWebhookUrl && (
+            <button className="share-btn" onClick={onShareStandings}>
+              📣 Jaa Discordiin
+            </button>
+          )}
+        </div>
         <table className="score-table sortable">
           <thead>
             <tr>
