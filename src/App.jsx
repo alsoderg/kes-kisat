@@ -20,7 +20,7 @@ export default function App() {
   // scores[stationId][playerId] = { points: number, style: number }
   const [scores, setScores] = usePersistentState("scores", {});
   const [discordWebhookUrl, setDiscordWebhookUrl] = usePersistentState("discordWebhookUrl", "");
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = usePersistentState("isAdmin", false);
   const [tab, setTab] = useState("register");
 
   const currentStation = stations[currentStationIndex] ?? null;
