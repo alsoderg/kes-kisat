@@ -19,6 +19,7 @@ export default function App() {
   const [currentStationIndex, setCurrentStationIndex] = usePersistentState("currentStationIndex", 0);
   // scores[stationId][playerId] = { points: number, style: number }
   const [scores, setScores] = usePersistentState("scores", {});
+  const [discordWebhookUrl, setDiscordWebhookUrl] = usePersistentState("discordWebhookUrl", "");
   const [isAdmin, setIsAdmin] = useState(false);
   const [tab, setTab] = useState("register");
 
@@ -80,6 +81,33 @@ export default function App() {
     setStations((prev) => prev.filter((s) => s.id !== id));
   }
 
+  async function shareStationToDiscord(station) {
+    if (!discordWebhookUrl) {
+      alert("Discord-webhook ei ole asetettu. Aseta se admin-tilassa Rekisteröinti-välilehdellä.");
+      return false;
+    }
+    const stationScores = scores[station.id] ?? {};
+    const lines = players.map((p) => {
+      const s = stationScores[p.id] ?? { points: 0, style: 0 };
+      const pts = Number(s.points) || 0;
+      const sty = Number(s.style) || 0;
+      return `**${p.name}**: ${pts} pistettä, ${sty} tyylipistettä (yht. ${pts + sty})`;
+    });
+    const content = `📣 **${station.name}** tulokset:\n${lines.join("\n") || "Ei tuloksia."}`;
+    try {
+      const res = await fetch(discordWebhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return true;
+    } catch (err) {
+      alert("Discordiin jakaminen epäonnistui: " + err.message);
+      return false;
+    }
+  }
+
   function resetAll() {
     if (!window.confirm("Nollataanko kaikki osallistujat, pisteet ja rastien tila? Tätä ei voi perua.")) return;
     setPlayers([]);
@@ -139,6 +167,8 @@ export default function App() {
             stations={stations}
             onAddStation={addStation}
             onRemoveStation={removeStation}
+            discordWebhookUrl={discordWebhookUrl}
+            onSetDiscordWebhookUrl={setDiscordWebhookUrl}
           />
         )}
         {tab === "competition" && (
@@ -152,6 +182,8 @@ export default function App() {
             isAdmin={isAdmin}
             onApproveAndAdvance={approveAndAdvance}
             onGoToStation={goToStation}
+            onShareToDiscord={shareStationToDiscord}
+            discordWebhookUrl={discordWebhookUrl}
           />
         )}
         {tab === "stats" && <StatsTab players={players} stations={stations} scores={scores} totals={totals} />}

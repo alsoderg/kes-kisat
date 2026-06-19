@@ -8,6 +8,8 @@ export default function CompetitionTab({
   isAdmin,
   onApproveAndAdvance,
   onGoToStation,
+  onShareToDiscord,
+  discordWebhookUrl,
 }) {
   if (!currentStation) {
     return <p className="empty-hint">Ei rasteja määritelty. Lisää rasteja admin-tilassa.</p>;
@@ -38,9 +40,16 @@ export default function CompetitionTab({
       </section>
 
       <section className="card">
-        <h2>
-          Rasti {currentStationIndex + 1}/{stations.length}: {currentStation.name}
-        </h2>
+        <div className="station-header">
+          <h2>
+            Rasti {currentStationIndex + 1}/{stations.length}: {currentStation.name}
+          </h2>
+          {discordWebhookUrl && (
+            <button className="share-btn" onClick={() => onShareToDiscord(currentStation)}>
+              📣 Jaa Discordiin
+            </button>
+          )}
+        </div>
         <p className="station-desc">{currentStation.description}</p>
 
         <table className="score-table">

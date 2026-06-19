@@ -8,10 +8,19 @@ export default function RegisterTab({
   stations,
   onAddStation,
   onRemoveStation,
+  discordWebhookUrl,
+  onSetDiscordWebhookUrl,
 }) {
   const [name, setName] = useState("");
   const [stationName, setStationName] = useState("");
   const [stationDesc, setStationDesc] = useState("");
+  const [webhookInput, setWebhookInput] = useState(discordWebhookUrl);
+
+  function submitWebhook(e) {
+    e.preventDefault();
+    onSetDiscordWebhookUrl(webhookInput.trim());
+    alert("Discord-webhook tallennettu tähän puhelimeen.");
+  }
 
   function submitPlayer(e) {
     e.preventDefault();
@@ -89,6 +98,26 @@ export default function RegisterTab({
               </li>
             ))}
           </ul>
+        </section>
+      )}
+
+      {isAdmin && (
+        <section className="card">
+          <h2>Discord-jako (admin) 📣</h2>
+          <p className="station-desc">
+            Liitä tähän kanavan webhook-URL, jotta rastien tulokset voi jakaa Discordiin. Tallentuu vain
+            tähän puhelimeen, ei mihinkään muualle.
+          </p>
+          <form onSubmit={submitWebhook} className="stack-form">
+            <input
+              type="text"
+              placeholder="https://discord.com/api/webhooks/..."
+              value={webhookInput}
+              onChange={(e) => setWebhookInput(e.target.value)}
+            />
+            <button type="submit">Tallenna webhook</button>
+          </form>
+          {discordWebhookUrl && <p className="player-count">✅ Webhook asetettu.</p>}
         </section>
       )}
     </div>
