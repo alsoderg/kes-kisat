@@ -11,6 +11,9 @@ export default function RegisterTab({
   discordWebhookUrl,
   onSetDiscordWebhookUrl,
   onSendKickoffAnnouncement,
+  onExportBackup,
+  onSendBackupToDiscord,
+  onImportBackup,
 }) {
   const [name, setName] = useState("");
   const [stationName, setStationName] = useState("");
@@ -126,6 +129,39 @@ export default function RegisterTab({
               </button>
             </>
           )}
+        </section>
+      )}
+
+      {isAdmin && (
+        <section className="card">
+          <h2>Varmuuskopio (admin) 💾</h2>
+          <p className="station-desc">
+            Jos puhelimen akku loppuu tai sovellus hajoaa, ota varmuuskopio talteen. Voit ladata sen
+            tiedostoksi tai lähettää Discordiin, ja tuoda sen takaisin myöhemmin (esim. toiselle puhelimelle).
+          </p>
+          <div className="backup-buttons">
+            <button className="share-btn" onClick={onExportBackup}>
+              ⬇️ Lataa tiedostoksi
+            </button>
+            {discordWebhookUrl && (
+              <button className="share-btn" onClick={onSendBackupToDiscord}>
+                📣 Lähetä Discordiin
+              </button>
+            )}
+            <label className="share-btn import-label">
+              ⬆️ Tuo tiedostosta
+              <input
+                type="file"
+                accept="application/json"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) onImportBackup(file);
+                  e.target.value = "";
+                }}
+                hidden
+              />
+            </label>
+          </div>
         </section>
       )}
     </div>

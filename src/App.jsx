@@ -130,6 +130,71 @@ export default function App() {
     return postToDiscord(content);
   }
 
+  function buildBackup() {
+    return {
+      version: 1,
+      savedAt: new Date().toISOString(),
+      players,
+      stations,
+      currentStationIndex,
+      scores,
+    };
+  }
+
+  function exportBackupToFile() {
+    const data = JSON.stringify(buildBackup(), null, 2);
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `kesakisat-varmuuskopio-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function sendBackupToDiscord() {
+    if (!discordWebhookUrl) {
+      alert("Discord-webhook ei ole asetettu. Aseta se admin-tilassa Rekisteröinti-välilehdellä.");
+      return;
+    }
+    const data = JSON.stringify(buildBackup(), null, 2);
+    const blob = new Blob([data], { type: "application/json" });
+    const form = new FormData();
+    form.append(
+      "payload_json",
+      JSON.stringify({ content: "💾 Kesäkisojen varmuuskopio" })
+    );
+    form.append("files[0]", blob, `kesakisat-varmuuskopio-${Date.now()}.json`);
+    try {
+      const res = await fetch(discordWebhookUrl, { method: "POST", body: form });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      alert("Varmuuskopio lähetetty Discordiin!");
+    } catch (err) {
+      alert("Varmuuskopion lähetys epäonnistui: " + err.message);
+    }
+  }
+
+  function importBackupFromFile(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        if (!data || typeof data !== "object") throw new Error("Virheellinen tiedosto");
+        if (!window.confirm("Tuodaanko varmuuskopio? Tämä korvaa nykyiset osallistujat, rastit ja pisteet.")) {
+          return;
+        }
+        setPlayers(data.players ?? []);
+        setStations(data.stations ?? defaultStations);
+        setCurrentStationIndex(data.currentStationIndex ?? 0);
+        setScores(data.scores ?? {});
+        alert("Varmuuskopio tuotu onnistuneesti!");
+      } catch (err) {
+        alert("Varmuuskopion tuonti epäonnistui: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
   function resetAll() {
     if (!window.confirm("Nollataanko kaikki osallistujat, pisteet ja rastien tila? Tätä ei voi perua.")) return;
     setPlayers([]);
@@ -193,6 +258,9 @@ export default function App() {
             discordWebhookUrl={discordWebhookUrl}
             onSetDiscordWebhookUrl={setDiscordWebhookUrl}
             onSendKickoffAnnouncement={sendKickoffAnnouncement}
+            onExportBackup={exportBackupToFile}
+            onSendBackupToDiscord={sendBackupToDiscord}
+            onImportBackup={importBackupFromFile}
           />
         )}
         {tab === "competition" && (

@@ -249,6 +249,19 @@ button {
   margin: 0;
 }
 
+.backup-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.import-label {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
 .kickoff-btn {
   margin-top: 10px;
   width: 100%;
