@@ -30,7 +30,7 @@ export default function AuthView() {
   return (
     <div className="app auth-screen">
       <div className="card auth-card">
-        <h1>☀️ Allun Kesäkisat 🏆</h1>
+        <h1>☀️ KesäkisApp 🏆</h1>
         <div className="seg">
           <button className={mode === "login" ? "active" : ""} onClick={() => setMode("login")}>
             Kirjaudu

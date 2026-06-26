@@ -36,7 +36,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>☀️ Allun Kesäkisat 🏆</h1>
+        <h1>☀️ KesäkisApp 🏆</h1>
         <div className="user-chip">
           <span>{user.displayName}{user.isAdmin ? " · admin" : ""}</span>
           <button className="link-btn" onClick={logout}>Kirjaudu ulos</button>
