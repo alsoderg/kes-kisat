@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
+import { Megaphone, Save } from "lucide-react";
 import { api } from "../api";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function AdminPanel() {
   const [webhook, setWebhook] = useState("");
@@ -12,48 +16,42 @@ export default function AdminPanel() {
   async function saveWebhook(e) {
     e.preventDefault();
     setMsg("");
-    try {
-      await api.put("/admin/settings", { discordWebhookUrl: webhook.trim() });
-      setMsg("Tallennettu ✓");
-    } catch (err) {
-      setMsg(err.message);
-    }
+    try { await api.put("/admin/settings", { discordWebhookUrl: webhook.trim() }); setMsg("Tallennettu ✓"); }
+    catch (err) { setMsg(err.message); }
   }
 
   async function sendKickoff() {
     try {
       await api.post("/admin/discord/announce", {
-        message: "@everyone KESÄKISAT ALKAA KOHTA 🏆☀️",
-        mentionEveryone: true,
+        message: "@everyone KESÄKISAT ALKAA KOHTA 🏆☀️", mentionEveryone: true,
       });
       alert("Ilmoitus lähetetty Discordiin!");
-    } catch (err) {
-      alert(err.message);
-    }
+    } catch (err) { alert(err.message); }
   }
 
   return (
-    <div className="card-stack">
-      <section className="card">
-        <h2>Hallintapaneeli 🛠️</h2>
-        <p className="station-desc">
-          Discord-webhook tallentuu palvelimelle (ei näy selaimessa). Kaikki Discord-jaot käyttävät tätä.
-        </p>
-        <form onSubmit={saveWebhook} className="stack-form">
-          <input
-            placeholder="https://discord.com/api/webhooks/..."
-            value={webhook}
-            onChange={(e) => setWebhook(e.target.value)}
-          />
-          {msg && <p className="ok-text">{msg}</p>}
-          <button className="primary-btn" type="submit">Tallenna webhook</button>
-        </form>
-        {webhook && (
-          <button className="share-btn kickoff-btn" onClick={sendKickoff}>
-            🚨 Lähetä "Kesäkisat alkaa kohta"
-          </button>
-        )}
-      </section>
+    <div className="flex flex-col gap-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Hallintapaneeli</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Discord-webhook tallentuu palvelimelle (ei näy selaimessa). Kaikki Discord-jaot käyttävät tätä.
+          </p>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          <form onSubmit={saveWebhook} className="flex flex-col gap-3">
+            <Input placeholder="https://discord.com/api/webhooks/..." value={webhook}
+              onChange={(e) => setWebhook(e.target.value)} />
+            {msg && <p className="text-sm text-emerald-400">{msg}</p>}
+            <Button type="submit" className="w-full"><Save className="size-4" /> Tallenna webhook</Button>
+          </form>
+          {webhook && (
+            <Button variant="secondary" onClick={sendKickoff}>
+              <Megaphone className="size-4" /> Lähetä "Kesäkisat alkaa kohta"
+            </Button>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { api } from "../api";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const medals = ["🥇", "🥈", "🥉"];
 
 export default function ResultsTab() {
   const [overall, setOverall] = useState([]);
@@ -18,125 +24,139 @@ export default function ResultsTab() {
   async function pickComp(id) {
     setSelectedComp(id);
     setOpenStation(null);
-    if (!id) {
-      setCompStandings([]);
-      setStations([]);
-      return;
-    }
+    if (!id) { setCompStandings([]); setStations([]); return; }
     const [st, s] = await Promise.all([
       api.get(`/stats/competitions/${id}/standings`),
       api.get(`/competitions/${id}/stations`),
     ]);
-    setCompStandings(st);
-    setStations(s);
+    setCompStandings(st); setStations(s);
   }
 
   async function openStationResults(stationId) {
-    if (openStation === stationId) {
-      setOpenStation(null);
-      return;
-    }
+    if (openStation === stationId) { setOpenStation(null); return; }
     setOpenStation(stationId);
     setStationResults(await api.get(`/stations/${stationId}/results`));
   }
 
-  const medals = ["🥇", "🥈", "🥉"];
-
   return (
-    <div className="card-stack">
-      {/* Kisakohtaiset + lajikohtaiset */}
-      <section className="card">
-        <h2>Kisakohtaiset tulokset 🏁</h2>
-        <select value={selectedComp} onChange={(e) => pickComp(e.target.value)}>
-          <option value="">Valitse kisa…</option>
-          {competitions.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
+    <div className="flex flex-col gap-4">
+      <Card>
+        <CardHeader><CardTitle>Kisakohtaiset tulokset 🏁</CardTitle></CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <Select value={selectedComp} onValueChange={pickComp}>
+            <SelectTrigger><SelectValue placeholder="Valitse kisa…" /></SelectTrigger>
+            <SelectContent>
+              {competitions.map((c) => (
+                <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        {selectedComp && (
-          <>
-            {compStandings.length === 0 ? (
-              <p className="empty-hint">Ei tuloksia.</p>
-            ) : (
-              <table className="score-table">
-                <thead>
-                  <tr><th>Sija</th><th>Pelaaja</th><th>Pisteet</th><th>Tyyli ✨</th><th>Yhteensä</th></tr>
-                </thead>
-                <tbody>
-                  {compStandings.map((row, i) => (
-                    <tr key={row.user_id} className={i === 0 ? "leader" : ""}>
-                      <td>{medals[i] ?? i + 1}</td>
-                      <td>{row.display_name}</td>
-                      <td>{row.points}</td>
-                      <td>{row.style_points}</td>
-                      <td><strong>{row.total}</strong></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+          {selectedComp && (
+            <>
+              {compStandings.length === 0 ? (
+                <p className="italic text-muted-foreground">Ei tuloksia.</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-10">Sija</TableHead>
+                      <TableHead>Pelaaja</TableHead>
+                      <TableHead className="text-right">Pisteet</TableHead>
+                      <TableHead className="text-right">Tyyli ✨</TableHead>
+                      <TableHead className="text-right">Yht.</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {compStandings.map((row, i) => (
+                      <TableRow key={row.user_id} className={i === 0 ? "bg-primary/10" : ""}>
+                        <TableCell>{medals[i] ?? i + 1}</TableCell>
+                        <TableCell className="font-medium">{row.display_name}</TableCell>
+                        <TableCell className="text-right">{row.points}</TableCell>
+                        <TableCell className="text-right">{row.style_points}</TableCell>
+                        <TableCell className="text-right font-bold">{row.total}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
 
-            <h3 className="subhead">Lajikohtaiset (avaa rasti)</h3>
-            <ul className="comp-list">
-              {stations.map((s) => (
-                <li key={s.id}>
-                  <button className="comp-row" onClick={() => openStationResults(s.id)}>
-                    <span className="comp-name">{s.name}</span>
-                  </button>
-                  {openStation === s.id && (
-                    <div className="event-detail">
-                      {stationResults.length === 0 ? (
-                        <p className="empty-hint">Ei tuloksia.</p>
-                      ) : (
-                        <table className="score-table">
-                          <thead>
-                            <tr><th>Pelaaja</th><th>Pisteet</th><th>Tyyli ✨</th><th>Yhteensä</th></tr>
-                          </thead>
-                          <tbody>
-                            {stationResults.map((row) => (
-                              <tr key={row.user_id}>
-                                <td>{row.display_name}</td>
-                                <td>{row.points}</td>
-                                <td>{row.style_points}</td>
-                                <td><strong>{row.total}</strong></td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+              <div>
+                <h3 className="mb-2 text-sm font-semibold text-muted-foreground">Lajikohtaiset (avaa rasti)</h3>
+                <ul className="flex flex-col gap-2">
+                  {stations.map((s) => (
+                    <li key={s.id} className="rounded-lg border border-border/60 bg-muted/30">
+                      <button onClick={() => openStationResults(s.id)}
+                        className="flex w-full items-center justify-between gap-2 px-4 py-2.5 text-left font-medium cursor-pointer">
+                        {s.name}
+                        {openStation === s.id ? <ChevronDown className="size-4 text-muted-foreground" /> : <ChevronRight className="size-4 text-muted-foreground" />}
+                      </button>
+                      {openStation === s.id && (
+                        <div className="border-t border-border/60 px-4 py-3">
+                          {stationResults.length === 0 ? (
+                            <p className="italic text-muted-foreground">Ei tuloksia.</p>
+                          ) : (
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Pelaaja</TableHead>
+                                  <TableHead className="text-right">Pisteet</TableHead>
+                                  <TableHead className="text-right">Tyyli ✨</TableHead>
+                                  <TableHead className="text-right">Yht.</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {stationResults.map((row) => (
+                                  <TableRow key={row.user_id}>
+                                    <TableCell className="font-medium">{row.display_name}</TableCell>
+                                    <TableCell className="text-right">{row.points}</TableCell>
+                                    <TableCell className="text-right">{row.style_points}</TableCell>
+                                    <TableCell className="text-right font-bold">{row.total}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          )}
+                        </div>
                       )}
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-      </section>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
 
-      {/* Kokonaistulokset yli kisojen */}
-      <section className="card">
-        <h2>Kokonaistulokset (kaikki kisat) 🏆</h2>
-        {overall.length === 0 ? (
-          <p className="empty-hint">Ei tuloksia vielä.</p>
-        ) : (
-          <table className="score-table">
-            <thead>
-              <tr><th>Sija</th><th>Pelaaja</th><th>Yhteensä</th><th>Kisoja</th></tr>
-            </thead>
-            <tbody>
-              {overall.map((row, i) => (
-                <tr key={row.user_id} className={i === 0 ? "leader" : ""}>
-                  <td>{medals[i] ?? i + 1}</td>
-                  <td>{row.display_name}</td>
-                  <td><strong>{row.total}</strong></td>
-                  <td>{row.competitions}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
+      <Card>
+        <CardHeader><CardTitle>Kokonaistulokset (kaikki kisat) 🏆</CardTitle></CardHeader>
+        <CardContent>
+          {overall.length === 0 ? (
+            <p className="italic text-muted-foreground">Ei tuloksia vielä.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10">Sija</TableHead>
+                  <TableHead>Pelaaja</TableHead>
+                  <TableHead className="text-right">Yht.</TableHead>
+                  <TableHead className="text-right">Kisoja</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {overall.map((row, i) => (
+                  <TableRow key={row.user_id} className={i === 0 ? "bg-primary/10" : ""}>
+                    <TableCell>{medals[i] ?? i + 1}</TableCell>
+                    <TableCell className="font-medium">{row.display_name}</TableCell>
+                    <TableCell className="text-right font-bold">{row.total}</TableCell>
+                    <TableCell className="text-right">{row.competitions}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

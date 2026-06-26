@@ -15,9 +15,4 @@ export const config = {
   port: Number(process.env.PORT) || 3001,
   cookieSecure: process.env.COOKIE_SECURE === "true",
   isProduction: process.env.NODE_ENV === "production",
-  admin: {
-    username: process.env.ADMIN_USERNAME || "allu",
-    password: process.env.ADMIN_PASSWORD || "vaihda-tama",
-    displayName: process.env.ADMIN_DISPLAY_NAME || "Allu",
-  },
 };

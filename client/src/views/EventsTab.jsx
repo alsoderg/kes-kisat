@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
+import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { api } from "../api";
 import { useAuth } from "../auth.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default function EventsTab() {
   const { user } = useAuth();
@@ -20,10 +26,7 @@ export default function EventsTab() {
   }, []);
 
   async function openEvent(ev) {
-    if (openId === ev.id) {
-      setOpenId(null);
-      return;
-    }
+    if (openId === ev.id) { setOpenId(null); return; }
     setOpenId(ev.id);
     setStandings(await api.get(`/stats/event-types/${ev.id}/standings`));
   }
@@ -33,75 +36,87 @@ export default function EventsTab() {
     setError("");
     try {
       await api.post("/event-types", { name, description, defaultRules: rules });
-      setName("");
-      setDescription("");
-      setRules("");
+      setName(""); setDescription(""); setRules("");
       load();
-    } catch (err) {
-      setError(err.message);
-    }
+    } catch (err) { setError(err.message); }
   }
 
   return (
-    <div className="card-stack">
+    <div className="flex flex-col gap-4">
       {user.isAdmin && (
-        <section className="card">
-          <h2>Lisää laji katalogiin 🛠️</h2>
-          <form onSubmit={addEvent} className="stack-form">
-            <input placeholder="Lajin nimi" value={name} onChange={(e) => setName(e.target.value)} />
-            <input placeholder="Kuvaus" value={description} onChange={(e) => setDescription(e.target.value)} />
-            <textarea placeholder="Säännöt (oletus)" value={rules} onChange={(e) => setRules(e.target.value)} rows={3} />
-            {error && <p className="error-text">{error}</p>}
-            <button className="primary-btn" type="submit">Lisää laji</button>
-          </form>
-        </section>
+        <Card>
+          <CardHeader><CardTitle>Lisää laji katalogiin</CardTitle></CardHeader>
+          <CardContent>
+            <form onSubmit={addEvent} className="flex flex-col gap-3">
+              <Input placeholder="Lajin nimi" value={name} onChange={(e) => setName(e.target.value)} />
+              <Input placeholder="Kuvaus" value={description} onChange={(e) => setDescription(e.target.value)} />
+              <Textarea placeholder="Säännöt (oletus)" value={rules} onChange={(e) => setRules(e.target.value)} rows={3} />
+              {error && <p className="text-sm text-destructive">{error}</p>}
+              <Button type="submit" className="w-full"><Plus className="size-4" /> Lisää laji</Button>
+            </form>
+          </CardContent>
+        </Card>
       )}
 
-      <section className="card">
-        <h2>Lajikatalogi 📍</h2>
-        <p className="station-desc">Kaikki lajit ja niiden säännöt. Avaa laji nähdäksesi kaikkien kisojen yhteistuloksen.</p>
-        {events.length === 0 ? (
-          <p className="empty-hint">Ei lajeja vielä.</p>
-        ) : (
-          <ul className="comp-list">
-            {events.map((ev) => (
-              <li key={ev.id}>
-                <button className="comp-row" onClick={() => openEvent(ev)}>
-                  <span className="comp-name">{ev.name}</span>
-                  {ev.description && <span className="comp-meta">{ev.description}</span>}
-                </button>
-                {openId === ev.id && (
-                  <div className="event-detail">
-                    {ev.default_rules && (
-                      <p className="rules-text"><strong>Säännöt:</strong> {ev.default_rules}</p>
-                    )}
-                    <h3>Kaikkien kisojen tulokset</h3>
-                    {standings.length === 0 ? (
-                      <p className="empty-hint">Ei tuloksia vielä.</p>
-                    ) : (
-                      <table className="score-table">
-                        <thead>
-                          <tr><th>Pelaaja</th><th>Paras</th><th>Yhteensä</th><th>Yrityksiä</th></tr>
-                        </thead>
-                        <tbody>
-                          {standings.map((row) => (
-                            <tr key={row.user_id}>
-                              <td>{row.display_name}</td>
-                              <td><strong>{row.best}</strong></td>
-                              <td>{row.total}</td>
-                              <td>{row.attempts}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    )}
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle>Lajikatalogi</CardTitle>
+          <p className="text-sm text-muted-foreground">Avaa laji nähdäksesi kaikkien kisojen yhteistuloksen.</p>
+        </CardHeader>
+        <CardContent>
+          {events.length === 0 ? (
+            <p className="italic text-muted-foreground">Ei lajeja vielä.</p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {events.map((ev) => (
+                <li key={ev.id} className="rounded-lg border border-border/60 bg-muted/30">
+                  <button onClick={() => openEvent(ev)}
+                    className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left cursor-pointer">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-semibold">{ev.name}</span>
+                      {ev.description && <span className="text-xs text-muted-foreground">{ev.description}</span>}
+                    </div>
+                    {openId === ev.id ? <ChevronDown className="size-4 text-muted-foreground" /> : <ChevronRight className="size-4 text-muted-foreground" />}
+                  </button>
+                  {openId === ev.id && (
+                    <div className="border-t border-border/60 px-4 py-3">
+                      {ev.default_rules && (
+                        <p className="mb-3 rounded-lg bg-primary/10 p-3 text-sm">
+                          <span className="font-semibold">Säännöt: </span>{ev.default_rules}
+                        </p>
+                      )}
+                      {standings.length === 0 ? (
+                        <p className="italic text-muted-foreground">Ei tuloksia vielä.</p>
+                      ) : (
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Pelaaja</TableHead>
+                              <TableHead className="text-right">Paras</TableHead>
+                              <TableHead className="text-right">Yht.</TableHead>
+                              <TableHead className="text-right">Yrityksiä</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {standings.map((row) => (
+                              <TableRow key={row.user_id}>
+                                <TableCell className="font-medium">{row.display_name}</TableCell>
+                                <TableCell className="text-right font-bold">{row.best}</TableCell>
+                                <TableCell className="text-right">{row.total}</TableCell>
+                                <TableCell className="text-right">{row.attempts}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

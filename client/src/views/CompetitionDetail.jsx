@@ -1,7 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
+import { ArrowLeft, MapPin, Clock, Users, Lock, Unlock, Megaphone, PartyPopper, Plus } from "lucide-react";
 import { api } from "../api";
 import { useAuth } from "../auth.jsx";
 import StationCard from "./StationCard.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const medals = ["🥇", "🥈", "🥉"];
 
 export default function CompetitionDetail({ competitionId, onBack }) {
   const { user } = useAuth();
@@ -18,9 +26,7 @@ export default function CompetitionDetail({ competitionId, onBack }) {
       api.get(`/competitions/${competitionId}/stations`),
       api.get(`/stats/competitions/${competitionId}/standings`),
     ]);
-    setComp(c);
-    setStations(s);
-    setStandings(st);
+    setComp(c); setStations(s); setStandings(st);
   }, [competitionId]);
 
   useEffect(() => {
@@ -28,7 +34,7 @@ export default function CompetitionDetail({ competitionId, onBack }) {
     if (user.isAdmin) api.get("/event-types").then(setEventTypes);
   }, [load, user.isAdmin]);
 
-  if (!comp) return <p className="empty-hint">Ladataan…</p>;
+  if (!comp) return <p className="italic text-muted-foreground">Ladataan…</p>;
 
   const isParticipant = comp.participants.some((p) => p.id === user.id);
   const locked = comp.is_locked;
@@ -38,122 +44,118 @@ export default function CompetitionDetail({ competitionId, onBack }) {
     else await api.post(`/competitions/${competitionId}/join`);
     load();
   }
-
   async function toggleLock() {
     await api.patch(`/competitions/${competitionId}`, { isLocked: !locked });
     load();
   }
-
-  async function addStation(e) {
-    e.preventDefault();
+  async function addStation() {
     setError("");
     try {
       await api.post(`/competitions/${competitionId}/stations`, {
-        eventTypeId: Number(newStationEvent),
-        position: stations.length,
+        eventTypeId: Number(newStationEvent), position: stations.length,
       });
       setNewStationEvent("");
       load();
-    } catch (err) {
-      setError(err.message);
-    }
+    } catch (err) { setError(err.message); }
   }
-
   async function shareStandings() {
-    try {
-      await api.post(`/admin/discord/competition/${competitionId}/standings`);
-      alert("Tilanne jaettu Discordiin!");
-    } catch (err) {
-      alert(err.message);
-    }
+    try { await api.post(`/admin/discord/competition/${competitionId}/standings`); alert("Tilanne jaettu Discordiin!"); }
+    catch (err) { alert(err.message); }
   }
-
   async function announceStart() {
-    try {
-      await api.post(`/admin/discord/start-time/${competitionId}`);
-      alert("Alkamisaika ilmoitettu Discordiin!");
-    } catch (err) {
-      alert(err.message);
-    }
+    try { await api.post(`/admin/discord/start-time/${competitionId}`); alert("Alkamisaika ilmoitettu!"); }
+    catch (err) { alert(err.message); }
   }
-
-  const medals = ["🥇", "🥈", "🥉"];
 
   return (
-    <div className="card-stack">
-      <button className="link-btn back-btn" onClick={onBack}>← Takaisin kisoihin</button>
+    <div className="flex flex-col gap-4">
+      <Button variant="ghost" size="sm" className="self-start" onClick={onBack}>
+        <ArrowLeft className="size-4" /> Takaisin kisoihin
+      </Button>
 
-      <section className="card">
-        <div className="station-header">
-          <h2>{locked ? "🔒 " : ""}{comp.name}</h2>
-          {!locked && (
-            <button className="share-btn" onClick={toggleJoin}>
-              {isParticipant ? "Poistu kisasta" : "Liity kisaan"}
-            </button>
-          )}
-        </div>
-        {comp.location && <p className="station-desc">📍 {comp.location}</p>}
-        {comp.start_time && (
-          <p className="station-desc">⏰ {new Date(comp.start_time).toLocaleString("fi-FI")}</p>
-        )}
-        <p className="player-count">{comp.participants.length} osallistujaa</p>
-
-        {user.isAdmin && (
-          <div className="admin-actions">
-            <button className="share-btn" onClick={toggleLock}>
-              {locked ? "🔓 Avaa lukitus" : "🔒 Lukitse kisa"}
-            </button>
-            <button className="share-btn" onClick={shareStandings}>📣 Jaa tilanne Discordiin</button>
-            {comp.start_time && (
-              <button className="share-btn" onClick={announceStart}>🎉 Ilmoita alkamisaika</button>
+      <Card>
+        <CardHeader>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <CardTitle className="flex items-center gap-2 text-xl">
+              {locked && <Lock className="size-4 text-muted-foreground" />}
+              {comp.name}
+            </CardTitle>
+            {!locked && (
+              <Button size="sm" variant={isParticipant ? "outline" : "default"} onClick={toggleJoin}>
+                {isParticipant ? "Poistu kisasta" : "Liity kisaan"}
+              </Button>
             )}
           </div>
-        )}
-      </section>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-2 text-sm text-muted-foreground">
+          {comp.location && <span className="flex items-center gap-1.5"><MapPin className="size-4" />{comp.location}</span>}
+          {comp.start_time && <span className="flex items-center gap-1.5"><Clock className="size-4" />{new Date(comp.start_time).toLocaleString("fi-FI")}</span>}
+          <span className="flex items-center gap-1.5"><Users className="size-4" />{comp.participants.length} osallistujaa</span>
 
-      {/* Kisakohtainen tilanne */}
-      <section className="card">
-        <h2>Kisan tilanne 🏆</h2>
-        {standings.length === 0 ? (
-          <p className="empty-hint">Ei tuloksia vielä.</p>
-        ) : (
-          <table className="score-table">
-            <thead>
-              <tr><th>Sija</th><th>Pelaaja</th><th>Pisteet</th><th>Tyyli ✨</th><th>Yhteensä</th></tr>
-            </thead>
-            <tbody>
-              {standings.map((row, i) => (
-                <tr key={row.user_id} className={i === 0 ? "leader" : ""}>
-                  <td>{medals[i] ?? i + 1}</td>
-                  <td>{row.display_name}</td>
-                  <td>{row.points}</td>
-                  <td>{row.style_points}</td>
-                  <td><strong>{row.total}</strong></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
+          {user.isAdmin && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Button size="sm" variant="secondary" onClick={toggleLock}>
+                {locked ? <><Unlock className="size-4" /> Avaa lukitus</> : <><Lock className="size-4" /> Lukitse kisa</>}
+              </Button>
+              <Button size="sm" variant="secondary" onClick={shareStandings}><Megaphone className="size-4" /> Jaa tilanne</Button>
+              {comp.start_time && <Button size="sm" variant="secondary" onClick={announceStart}><PartyPopper className="size-4" /> Ilmoita aika</Button>}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-      {/* Admin: lisää rasti */}
+      <Card>
+        <CardHeader><CardTitle>Kisan tilanne 🏆</CardTitle></CardHeader>
+        <CardContent>
+          {standings.length === 0 ? (
+            <p className="italic text-muted-foreground">Ei tuloksia vielä.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10">Sija</TableHead>
+                  <TableHead>Pelaaja</TableHead>
+                  <TableHead className="text-right">Pisteet</TableHead>
+                  <TableHead className="text-right">Tyyli ✨</TableHead>
+                  <TableHead className="text-right">Yht.</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {standings.map((row, i) => (
+                  <TableRow key={row.user_id} className={i === 0 ? "bg-primary/10" : ""}>
+                    <TableCell>{medals[i] ?? i + 1}</TableCell>
+                    <TableCell className="font-medium">{row.display_name}</TableCell>
+                    <TableCell className="text-right">{row.points}</TableCell>
+                    <TableCell className="text-right">{row.style_points}</TableCell>
+                    <TableCell className="text-right font-bold">{row.total}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
       {user.isAdmin && (
-        <section className="card">
-          <h2>Lisää rasti kisaan 🛠️</h2>
-          <form onSubmit={addStation} className="inline-form">
-            <select value={newStationEvent} onChange={(e) => setNewStationEvent(e.target.value)}>
-              <option value="">Valitse laji…</option>
-              {eventTypes.map((ev) => (
-                <option key={ev.id} value={ev.id}>{ev.name}</option>
-              ))}
-            </select>
-            <button type="submit" disabled={!newStationEvent}>Lisää</button>
-          </form>
-          {error && <p className="error-text">{error}</p>}
-        </section>
+        <Card>
+          <CardHeader><CardTitle>Lisää rasti kisaan</CardTitle></CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <div className="flex gap-2">
+              <Select value={newStationEvent} onValueChange={setNewStationEvent}>
+                <SelectTrigger className="flex-1"><SelectValue placeholder="Valitse laji…" /></SelectTrigger>
+                <SelectContent>
+                  {eventTypes.map((ev) => (
+                    <SelectItem key={ev.id} value={String(ev.id)}>{ev.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button onClick={addStation} disabled={!newStationEvent}><Plus className="size-4" /> Lisää</Button>
+            </div>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+          </CardContent>
+        </Card>
       )}
 
-      {/* Rastit + pisteytys */}
       {stations.map((station) => (
         <StationCard
           key={station.id}

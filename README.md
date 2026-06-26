@@ -38,7 +38,7 @@ cp server/.env.example server/.env   # täytä DATABASE_URL, JWT_SECRET
 
 # 4. Tietokanta
 npm run db:migrate
-npm run db:seed                      # lajikatalogi + 1. admin-tili
+npm run db:import                    # tuo varmuuskopion (käyttäjät, kisa, rastit, tulokset)
 
 # 5. Käynnistä (server :3001 + client :5173, vite proxaa /api -> :3001)
 npm run dev

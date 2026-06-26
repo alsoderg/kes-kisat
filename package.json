@@ -8,15 +8,13 @@
     "server"
   ],
   "scripts": {
-    "dev": "concurrently -n server,client -c blue,green \"npm run dev -w server\" \"npm run dev -w client\"",
+    "dev": "node scripts/dev.mjs",
+    "dev:server": "node scripts/dev.mjs server",
+    "dev:client": "node scripts/dev.mjs client",
     "build": "npm run build -w client",
     "start": "npm run start -w server",
     "db:migrate": "npm run db:migrate -w server",
-    "db:seed": "npm run db:seed -w server",
     "db:import": "npm run db:import -w server",
     "deploy": "node scripts/deploy.mjs"
-  },
-  "devDependencies": {
-    "concurrently": "^9.1.0"
   }
 }

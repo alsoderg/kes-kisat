@@ -36,7 +36,7 @@ cd /opt/kesakisat
 sudo -u kesakisat npm ci
 sudo -u kesakisat npm run build
 sudo -u kesakisat npm run db:migrate
-sudo -u kesakisat npm run db:seed     # luo lajikatalogin + 1. admin-tilin
+sudo -u kesakisat npm run db:import   # tuo varmuuskopion (käyttäjät, kisa, rastit, tulokset)
 ```
 
 ## 4. systemd-palvelu

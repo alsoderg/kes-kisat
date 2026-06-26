@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
+import { Lock, Users, MapPin, ChevronRight } from "lucide-react";
 import { api } from "../api";
 import { useAuth } from "../auth.jsx";
 import CompetitionDetail from "./CompetitionDetail.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function CompetitionsTab() {
   const { user } = useAuth();
@@ -24,9 +29,7 @@ export default function CompetitionsTab() {
     setError("");
     try {
       await api.post("/competitions", { name, location, startTime: startTime || null });
-      setName("");
-      setLocation("");
-      setStartTime("");
+      setName(""); setLocation(""); setStartTime("");
       load();
     } catch (err) {
       setError(err.message);
@@ -38,44 +41,57 @@ export default function CompetitionsTab() {
   }
 
   return (
-    <div className="card-stack">
+    <div className="flex flex-col gap-4">
       {user.isAdmin && (
-        <section className="card">
-          <h2>Luo uusi kisa 🛠️</h2>
-          <form onSubmit={addCompetition} className="stack-form">
-            <input placeholder="Kisan nimi" value={name} onChange={(e) => setName(e.target.value)} />
-            <input placeholder="Paikka" value={location} onChange={(e) => setLocation(e.target.value)} />
-            <label className="field-label">Alkamisaika
-              <input type="datetime-local" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
-            </label>
-            {error && <p className="error-text">{error}</p>}
-            <button className="primary-btn" type="submit">Luo kisa</button>
-          </form>
-        </section>
+        <Card>
+          <CardHeader><CardTitle>Luo uusi kisa</CardTitle></CardHeader>
+          <CardContent>
+            <form onSubmit={addCompetition} className="flex flex-col gap-3">
+              <Input placeholder="Kisan nimi" value={name} onChange={(e) => setName(e.target.value)} />
+              <Input placeholder="Paikka" value={location} onChange={(e) => setLocation(e.target.value)} />
+              <Label className="flex-col items-start gap-1.5">
+                Alkamisaika
+                <Input type="datetime-local" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+              </Label>
+              {error && <p className="text-sm text-destructive">{error}</p>}
+              <Button type="submit" className="w-full">Luo kisa</Button>
+            </form>
+          </CardContent>
+        </Card>
       )}
 
-      <section className="card">
-        <h2>Kisat 🏁</h2>
-        {competitions.length === 0 ? (
-          <p className="empty-hint">Ei kisoja vielä.</p>
-        ) : (
-          <ul className="comp-list">
-            {competitions.map((c) => (
-              <li key={c.id}>
-                <button className="comp-row" onClick={() => setOpenId(c.id)}>
-                  <span className="comp-name">
-                    {c.is_locked ? "🔒 " : ""}{c.name}
-                  </span>
-                  <span className="comp-meta">
-                    {c.location ? `${c.location} · ` : ""}
-                    {c.participant_count} osallistujaa · {c.station_count} rastia
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <Card>
+        <CardHeader><CardTitle>Kisat</CardTitle></CardHeader>
+        <CardContent>
+          {competitions.length === 0 ? (
+            <p className="italic text-muted-foreground">Ei kisoja vielä.</p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {competitions.map((c) => (
+                <li key={c.id}>
+                  <button
+                    onClick={() => setOpenId(c.id)}
+                    className="group flex w-full items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/30 px-4 py-3 text-left transition-colors hover:border-primary/50 hover:bg-muted/60 cursor-pointer"
+                  >
+                    <div className="flex flex-col gap-1">
+                      <span className="flex items-center gap-1.5 font-semibold">
+                        {c.is_locked && <Lock className="size-3.5 text-muted-foreground" />}
+                        {c.name}
+                      </span>
+                      <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                        {c.location && <span className="flex items-center gap-1"><MapPin className="size-3" />{c.location}</span>}
+                        <span className="flex items-center gap-1"><Users className="size-3" />{c.participant_count} osallistujaa</span>
+                        <span>{c.station_count} rastia</span>
+                      </span>
+                    </div>
+                    <ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

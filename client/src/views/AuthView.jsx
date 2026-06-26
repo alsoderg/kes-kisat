@@ -1,5 +1,9 @@
 import { useState } from "react";
+import { Sun } from "lucide-react";
 import { useAuth } from "../auth.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function AuthView() {
   const { login, register } = useAuth();
@@ -15,11 +19,8 @@ export default function AuthView() {
     setError("");
     setBusy(true);
     try {
-      if (mode === "login") {
-        await login(username, password);
-      } else {
-        await register(username, password, displayName);
-      }
+      if (mode === "login") await login(username, password);
+      else await register(username, password, displayName);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -28,44 +29,45 @@ export default function AuthView() {
   }
 
   return (
-    <div className="app auth-screen">
-      <div className="card auth-card">
-        <h1>☀️ KesäkisApp 🏆</h1>
-        <div className="seg">
-          <button className={mode === "login" ? "active" : ""} onClick={() => setMode("login")}>
-            Kirjaudu
-          </button>
-          <button className={mode === "register" ? "active" : ""} onClick={() => setMode("register")}>
-            Luo tili
-          </button>
-        </div>
-        <form onSubmit={submit} className="stack-form">
-          <input
-            placeholder="Käyttäjänimi"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            autoComplete="username"
-          />
-          {mode === "register" && (
-            <input
-              placeholder="Näyttönimi (valinnainen)"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-            />
-          )}
-          <input
-            type="password"
-            placeholder="Salasana"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete={mode === "login" ? "current-password" : "new-password"}
-          />
-          {error && <p className="error-text">{error}</p>}
-          <button className="primary-btn" type="submit" disabled={busy}>
-            {mode === "login" ? "Kirjaudu sisään" : "Luo tili ja kirjaudu"}
-          </button>
-        </form>
-      </div>
+    <div className="flex min-h-svh items-center justify-center p-4">
+      <Card className="w-full max-w-sm">
+        <CardHeader className="items-center text-center">
+          <CardTitle className="flex items-center justify-center gap-2 text-2xl">
+            <Sun className="size-6 text-primary" /> KesäkisApp
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted/60 p-1">
+            {["login", "register"].map((m) => (
+              <button
+                key={m}
+                onClick={() => setMode(m)}
+                className={`rounded-md py-2 text-sm font-medium transition-colors cursor-pointer ${
+                  mode === m ? "bg-card text-foreground shadow" : "text-muted-foreground"
+                }`}
+              >
+                {m === "login" ? "Kirjaudu" : "Luo tili"}
+              </button>
+            ))}
+          </div>
+
+          <form onSubmit={submit} className="flex flex-col gap-3">
+            <Input placeholder="Käyttäjänimi" value={username} autoComplete="username"
+              onChange={(e) => setUsername(e.target.value)} />
+            {mode === "register" && (
+              <Input placeholder="Näyttönimi (valinnainen)" value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)} />
+            )}
+            <Input type="password" placeholder="Salasana" value={password}
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
+              onChange={(e) => setPassword(e.target.value)} />
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            <Button type="submit" disabled={busy} className="w-full">
+              {mode === "login" ? "Kirjaudu sisään" : "Luo tili ja kirjaudu"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }
