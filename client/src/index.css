@@ -1,0 +1,76 @@
+:root {
+  /* Oletusteema = kesä */
+  --sun: #ffb703;
+  --accent: #fb8500;
+  --accent2: #219ebc;
+  --deep: #023047;
+  --bg-top: #fff3cd;
+  --bg-mid: #fff8e7;
+  --bg-bot: #e8f6fb;
+  --card: #ffffff;
+  --text: #023047;
+  --muted: #6b7a83;
+
+  font: 17px/145% system-ui, "Segoe UI", Roboto, sans-serif;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+:root[data-theme="meri"] {
+  --sun: #48cae4;
+  --accent: #0077b6;
+  --accent2: #00b4d8;
+  --deep: #03045e;
+  --bg-top: #caf0f8;
+  --bg-mid: #ade8f4;
+  --bg-bot: #90e0ef;
+  --text: #03045e;
+  --muted: #4a6a8a;
+}
+
+:root[data-theme="auringonlasku"] {
+  --sun: #ff9e00;
+  --accent: #ff5400;
+  --accent2: #ff0054;
+  --deep: #390099;
+  --bg-top: #ffd6a5;
+  --bg-mid: #ffe8d6;
+  --bg-bot: #ffc9b5;
+  --text: #5f1500;
+  --muted: #9a5a44;
+}
+
+:root[data-theme="yo"] {
+  --sun: #ffd60a;
+  --accent: #7b2ff7;
+  --accent2: #4cc9f0;
+  --deep: #e0e1dd;
+  --bg-top: #0d1b2a;
+  --bg-mid: #1b263b;
+  --bg-bot: #0d1b2a;
+  --card: #1b263b;
+  --text: #e0e1dd;
+  --muted: #9aa6b2;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 45%, var(--bg-bot) 100%);
+  background-attachment: fixed;
+  min-height: 100svh;
+}
+
+#root {
+  max-width: 760px;
+  margin: 0 auto;
+  min-height: 100svh;
+}
+
+h1, h2, h3 {
+  font-weight: 700;
+  color: var(--deep);
+}
