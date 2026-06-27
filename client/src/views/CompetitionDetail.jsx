@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, MapPin, Clock, Users, Lock, Unlock, Megaphone, PartyPopper, Plus, Pencil, Trash2 } from "lucide-react";
 import { api } from "../api";
 import { useAuth } from "../auth.jsx";
+import { useConfirm } from "@/components/ConfirmDialog.jsx";
 import StationCard from "./StationCard.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ function toLocalInput(iso) {
 
 export default function CompetitionDetail({ competitionId, onBack }) {
   const { user } = useAuth();
+  const confirm = useConfirm();
   const isAdmin = !!user?.isAdmin;
   const [comp, setComp] = useState(null);
   const [stations, setStations] = useState([]);
@@ -53,8 +55,17 @@ export default function CompetitionDetail({ competitionId, onBack }) {
   const locked = comp.is_locked;
 
   async function toggleJoin() {
-    if (isParticipant) await api.del(`/competitions/${competitionId}/join`);
-    else await api.post(`/competitions/${competitionId}/join`);
+    if (isParticipant) {
+      const ok = await confirm({
+        title: "Poistu kisasta",
+        description: `Poistutaanko kisasta "${comp.name}"? Voit liittyä uudelleen myöhemmin.`,
+        confirmLabel: "Poistu",
+      });
+      if (!ok) return;
+      await api.del(`/competitions/${competitionId}/join`);
+    } else {
+      await api.post(`/competitions/${competitionId}/join`);
+    }
     load();
   }
   async function toggleLock() {
@@ -85,7 +96,13 @@ export default function CompetitionDetail({ competitionId, onBack }) {
     } catch (err) { setError(err.message); }
   }
   async function deleteCompetition() {
-    if (!window.confirm(`Poistetaanko kisa "${comp.name}" ja kaikki sen rastit ja tulokset? Tätä ei voi perua.`)) return;
+    const ok = await confirm({
+      title: "Poista kisa",
+      description: `Poistetaanko kisa "${comp.name}" ja kaikki sen rastit ja tulokset? Tätä ei voi perua.`,
+      confirmLabel: "Poista",
+      variant: "destructive",
+    });
+    if (!ok) return;
     try {
       await api.del(`/competitions/${competitionId}`);
       onBack();

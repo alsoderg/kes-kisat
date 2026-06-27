@@ -8,18 +8,37 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
-const THEMES = [
-  { id: "kesa", label: "☀️ Kesä", gradient: "from-amber-300 to-orange-500" },
-  { id: "meri", label: "🌊 Meri", gradient: "from-cyan-400 to-blue-600" },
-  { id: "auringonlasku", label: "🌅 Auringonlasku", gradient: "from-orange-400 via-rose-500 to-purple-600" },
-  { id: "yo", label: "🌙 Yö", gradient: "from-indigo-500 to-violet-700" },
-  { id: "metsa", label: "🌲 Metsä", gradient: "from-green-400 to-emerald-700" },
-  { id: "ruusu", label: "🌹 Ruusu", gradient: "from-pink-400 to-fuchsia-600" },
-  { id: "minttu", label: "🍃 Minttu", gradient: "from-teal-300 to-emerald-500" },
-  { id: "laventeli", label: "💜 Laventeli", gradient: "from-purple-300 to-violet-500" },
-  { id: "tuli", label: "🔥 Tuli", gradient: "from-red-500 to-orange-500" },
-  { id: "jaa", label: "❄️ Jää", gradient: "from-sky-200 to-cyan-500" },
+// Värilliset teemat: koko tausta vaihtuu nimen mukaiseksi
+const THEMES_LIGHT = [
+  { id: "kesa-light", label: "☀️ Kesä", gradient: "from-amber-200 to-orange-400" },
+  { id: "meri-light", label: "🌊 Meri", gradient: "from-sky-200 to-blue-400" },
+  { id: "auringonlasku-light", label: "🌅 Auringonlasku", gradient: "from-orange-300 via-rose-300 to-pink-400" },
+  { id: "metsa-light", label: "🌲 Metsä", gradient: "from-lime-200 to-emerald-400" },
 ];
+
+// Tummat teemat: tumma tausta, vaihtuva korostusväri
+const THEMES_DARK = [
+  { id: "kesa", label: "Kesä", gradient: "from-amber-300 to-orange-500" },
+  { id: "meri", label: "Meri", gradient: "from-cyan-400 to-blue-600" },
+  { id: "auringonlasku", label: "Auringonlasku", gradient: "from-orange-400 via-rose-500 to-purple-600" },
+  { id: "yo", label: "Yö", gradient: "from-indigo-500 to-violet-700" },
+];
+
+function ThemeChip({ t, selected, onPick }) {
+  return (
+    <button type="button" onClick={() => onPick(t.id)}
+      className={cn(
+        "flex flex-col gap-2 rounded-lg border p-2 text-left transition-all cursor-pointer hover:border-primary/60",
+        selected ? "border-primary ring-2 ring-primary/40" : "border-border/60"
+      )}>
+      <span className={cn("h-9 w-full rounded-md bg-linear-to-r", t.gradient)} />
+      <span className="flex items-center justify-between text-xs font-medium">
+        {t.label}
+        {selected && <Check className="size-3.5 text-primary" />}
+      </span>
+    </button>
+  );
+}
 
 export default function ProfileView() {
   const { user, updateProfile } = useAuth();
@@ -64,24 +83,20 @@ export default function ProfileView() {
               <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
             </Label>
 
-            <div className="flex flex-col gap-2">
-              <Label>Aksenttiteema</Label>
-              <p className="-mt-1 text-xs text-muted-foreground">
-                Tausta on aina tumma — väri vaihtaa vain korostusvärin.
-              </p>
+            <div className="flex flex-col gap-3">
+              <Label>Teema</Label>
+
+              <p className="text-xs font-semibold text-muted-foreground">🌈 Värilliset</p>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {THEMES.map((t) => (
-                  <button type="button" key={t.id} onClick={() => pickTheme(t.id)}
-                    className={cn(
-                      "flex flex-col gap-2 rounded-lg border p-2 text-left transition-all cursor-pointer hover:border-primary/60",
-                      theme === t.id ? "border-primary ring-2 ring-primary/40" : "border-border/60"
-                    )}>
-                    <span className={cn("h-9 w-full rounded-md bg-linear-to-r", t.gradient)} />
-                    <span className="flex items-center justify-between text-xs font-medium">
-                      {t.label}
-                      {theme === t.id && <Check className="size-3.5 text-primary" />}
-                    </span>
-                  </button>
+                {THEMES_LIGHT.map((t) => (
+                  <ThemeChip key={t.id} t={t} selected={theme === t.id} onPick={pickTheme} />
+                ))}
+              </div>
+
+              <p className="mt-1 text-xs font-semibold text-muted-foreground">🌙 Tummat</p>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {THEMES_DARK.map((t) => (
+                  <ThemeChip key={t.id} t={t} selected={theme === t.id} onPick={pickTheme} />
                 ))}
               </div>
             </div>

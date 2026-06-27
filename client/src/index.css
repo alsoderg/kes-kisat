@@ -28,8 +28,9 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Tumma teema on pakollinen – nämä ovat ainoat tokenit. */
+/* Oletus = tumma. Värilliset teemat (alla) ohittavat tokenit kokonaan. */
 :root {
+  color-scheme: dark;
   --radius: 0.75rem;
   --background: oklch(0.16 0.02 260);
   --foreground: oklch(0.97 0.01 250);
@@ -98,6 +99,69 @@
   --ring: oklch(0.83 0.1 220);
 }
 
+/* ===== Värilliset (vaaleat) teemat – koko paletti vaihtuu ===== */
+/* Yhteiset vaaleat tokenit kaikille -light-teemoille */
+:root[data-theme$="-light"] {
+  color-scheme: light;
+  --foreground: oklch(0.28 0.03 260);
+  --card-foreground: oklch(0.28 0.03 260);
+  --popover-foreground: oklch(0.28 0.03 260);
+  --secondary-foreground: oklch(0.3 0.03 260);
+  --accent-foreground: oklch(0.3 0.03 260);
+  --muted-foreground: oklch(0.48 0.03 260);
+  --border: oklch(0.3 0.03 260 / 14%);
+  --input: oklch(0.3 0.03 260 / 10%);
+  --destructive: oklch(0.58 0.22 25);
+}
+
+:root[data-theme="kesa-light"] {
+  --background: oklch(0.97 0.035 95);
+  --card: oklch(0.995 0.02 95);
+  --popover: oklch(0.995 0.02 95);
+  --muted: oklch(0.93 0.04 100);
+  --secondary: oklch(0.9 0.07 130);
+  --accent: oklch(0.91 0.06 130);
+  --primary: oklch(0.68 0.18 50);
+  --primary-foreground: oklch(0.99 0.02 90);
+  --ring: oklch(0.68 0.18 50);
+}
+
+:root[data-theme="meri-light"] {
+  --background: oklch(0.96 0.03 220);
+  --card: oklch(0.99 0.015 215);
+  --popover: oklch(0.99 0.015 215);
+  --muted: oklch(0.92 0.035 220);
+  --secondary: oklch(0.89 0.06 210);
+  --accent: oklch(0.9 0.05 210);
+  --primary: oklch(0.58 0.15 235);
+  --primary-foreground: oklch(0.99 0.01 220);
+  --ring: oklch(0.58 0.15 235);
+}
+
+:root[data-theme="auringonlasku-light"] {
+  --background: oklch(0.95 0.045 45);
+  --card: oklch(0.985 0.025 40);
+  --popover: oklch(0.985 0.025 40);
+  --muted: oklch(0.92 0.05 40);
+  --secondary: oklch(0.9 0.07 20);
+  --accent: oklch(0.91 0.06 20);
+  --primary: oklch(0.62 0.21 25);
+  --primary-foreground: oklch(0.99 0.02 60);
+  --ring: oklch(0.62 0.21 25);
+}
+
+:root[data-theme="metsa-light"] {
+  --background: oklch(0.96 0.03 150);
+  --card: oklch(0.99 0.015 150);
+  --popover: oklch(0.99 0.015 150);
+  --muted: oklch(0.92 0.035 150);
+  --secondary: oklch(0.89 0.06 150);
+  --accent: oklch(0.9 0.05 150);
+  --primary: oklch(0.53 0.14 150);
+  --primary-foreground: oklch(0.99 0.015 150);
+  --ring: oklch(0.53 0.14 150);
+}
+
 @layer base {
   * {
     border-color: var(--border);
@@ -106,8 +170,8 @@
     background-color: var(--background);
     color: var(--foreground);
     background-image:
-      radial-gradient(1200px 600px at 80% -10%, color-mix(in oklab, var(--primary) 14%, transparent), transparent),
-      radial-gradient(1000px 500px at -10% 110%, oklch(0.5 0.12 230 / 0.12), transparent);
+      radial-gradient(1200px 600px at 80% -10%, color-mix(in oklab, var(--primary) 16%, transparent), transparent),
+      radial-gradient(1000px 500px at -10% 110%, color-mix(in oklab, var(--primary) 10%, transparent), transparent);
     background-attachment: fixed;
     min-height: 100svh;
     -webkit-font-smoothing: antialiased;
