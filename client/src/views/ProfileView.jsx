@@ -9,10 +9,16 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 const THEMES = [
-  { id: "kesa", label: "☀️ Kesä", swatch: "bg-amber-400" },
-  { id: "meri", label: "🌊 Meri", swatch: "bg-sky-400" },
-  { id: "auringonlasku", label: "🌅 Auringonlasku", swatch: "bg-rose-500" },
-  { id: "yo", label: "🌙 Yö", swatch: "bg-violet-500" },
+  { id: "kesa", label: "☀️ Kesä", gradient: "from-amber-300 to-orange-500" },
+  { id: "meri", label: "🌊 Meri", gradient: "from-cyan-400 to-blue-600" },
+  { id: "auringonlasku", label: "🌅 Auringonlasku", gradient: "from-orange-400 via-rose-500 to-purple-600" },
+  { id: "yo", label: "🌙 Yö", gradient: "from-indigo-500 to-violet-700" },
+  { id: "metsa", label: "🌲 Metsä", gradient: "from-green-400 to-emerald-700" },
+  { id: "ruusu", label: "🌹 Ruusu", gradient: "from-pink-400 to-fuchsia-600" },
+  { id: "minttu", label: "🍃 Minttu", gradient: "from-teal-300 to-emerald-500" },
+  { id: "laventeli", label: "💜 Laventeli", gradient: "from-purple-300 to-violet-500" },
+  { id: "tuli", label: "🔥 Tuli", gradient: "from-red-500 to-orange-500" },
+  { id: "jaa", label: "❄️ Jää", gradient: "from-sky-200 to-cyan-500" },
 ];
 
 export default function ProfileView() {
@@ -59,18 +65,22 @@ export default function ProfileView() {
             </Label>
 
             <div className="flex flex-col gap-2">
-              <Label>Aksenttiteema (tausta on aina tumma)</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <Label>Aksenttiteema</Label>
+              <p className="-mt-1 text-xs text-muted-foreground">
+                Tausta on aina tumma — väri vaihtaa vain korostusvärin.
+              </p>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {THEMES.map((t) => (
                   <button type="button" key={t.id} onClick={() => pickTheme(t.id)}
                     className={cn(
-                      "flex items-center justify-between gap-2 rounded-lg border bg-muted/30 px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer hover:bg-muted/60",
+                      "flex flex-col gap-2 rounded-lg border p-2 text-left transition-all cursor-pointer hover:border-primary/60",
                       theme === t.id ? "border-primary ring-2 ring-primary/40" : "border-border/60"
                     )}>
-                    <span className="flex items-center gap-2">
-                      <span className={cn("size-3.5 rounded-full", t.swatch)} /> {t.label}
+                    <span className={cn("h-9 w-full rounded-md bg-linear-to-r", t.gradient)} />
+                    <span className="flex items-center justify-between text-xs font-medium">
+                      {t.label}
+                      {theme === t.id && <Check className="size-3.5 text-primary" />}
                     </span>
-                    {theme === t.id && <Check className="size-4 text-primary" />}
                   </button>
                 ))}
               </div>

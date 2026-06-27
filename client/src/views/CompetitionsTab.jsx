@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Lock, Users, MapPin, ChevronRight } from "lucide-react";
 import { api } from "../api";
 import { useAuth } from "../auth.jsx";
+import { useUrlParam } from "../useUrlState.js";
 import CompetitionDetail from "./CompetitionDetail.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,7 @@ import { Label } from "@/components/ui/label";
 export default function CompetitionsTab() {
   const { user } = useAuth();
   const [competitions, setCompetitions] = useState([]);
-  const [openId, setOpenId] = useState(null);
+  const [openId, setOpenId] = useUrlParam("comp", "");
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [startTime, setStartTime] = useState("");
@@ -37,12 +38,12 @@ export default function CompetitionsTab() {
   }
 
   if (openId) {
-    return <CompetitionDetail competitionId={openId} onBack={() => { setOpenId(null); load(); }} />;
+    return <CompetitionDetail competitionId={openId} onBack={() => { setOpenId(""); load(); }} />;
   }
 
   return (
     <div className="flex flex-col gap-4">
-      {user.isAdmin && (
+      {user?.isAdmin && (
         <Card>
           <CardHeader><CardTitle>Luo uusi kisa</CardTitle></CardHeader>
           <CardContent>

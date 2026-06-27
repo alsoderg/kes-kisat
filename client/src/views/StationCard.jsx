@@ -9,9 +9,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 export default function StationCard({ station, participants, competitionLocked, onChanged }) {
   const { user } = useAuth();
+  const isAdmin = !!user?.isAdmin;
   const [results, setResults] = useState({});
+  const [open, setOpen] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const locked = station.is_locked || competitionLocked;
+  const readOnly = locked || !user;
 
   async function loadResults() {
     const rows = await api.get(`/stations/${station.id}/results`);
@@ -20,9 +23,9 @@ export default function StationCard({ station, participants, competitionLocked, 
     setResults(map);
   }
   useEffect(() => {
-    loadResults();
+    if (open) loadResults();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [station.id]);
+  }, [station.id, open]);
 
   async function save(userId, field, value) {
     const current = results[userId] ?? { points: 0, style_points: 0 };
@@ -39,82 +42,92 @@ export default function StationCard({ station, participants, competitionLocked, 
     await api.patch(`/stations/${station.id}`, { isLocked: !station.is_locked });
     onChanged();
   }
-  async function shareToDiscord() {
+  async function shareToDiscord(e) {
+    e.stopPropagation();
     try { await api.post(`/admin/discord/station/${station.id}`); alert("Rastin tulokset jaettu Discordiin!"); }
     catch (err) { alert(err.message); }
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <CardTitle className="flex items-center gap-2">
-            {locked && <Lock className="size-4 text-muted-foreground" />}
-            {station.name}
-          </CardTitle>
-          {user.isAdmin && (
-            <Button size="sm" variant="secondary" onClick={shareToDiscord}><Megaphone className="size-4" /> Jaa</Button>
-          )}
-        </div>
-        {station.description && <p className="text-sm text-muted-foreground">{station.description}</p>}
+    <Card className="gap-0 py-0">
+      <CardHeader
+        className="flex cursor-pointer flex-row items-center justify-between gap-2 py-4"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <CardTitle className="flex items-center gap-2">
+          {open ? <ChevronDown className="size-4 text-muted-foreground" /> : <ChevronRight className="size-4 text-muted-foreground" />}
+          {locked && <Lock className="size-4 text-muted-foreground" />}
+          {station.name}
+        </CardTitle>
+        {isAdmin && (
+          <Button size="sm" variant="secondary" onClick={shareToDiscord}><Megaphone className="size-4" /> Jaa</Button>
+        )}
       </CardHeader>
-      <CardContent className="flex flex-col gap-3">
-        {station.rules && (
-          <div>
-            <button onClick={() => setShowRules((v) => !v)}
-              className="flex items-center gap-1.5 text-sm font-medium text-primary cursor-pointer">
-              {showRules ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
-              <BookOpen className="size-3.5" /> Säännöt
-            </button>
-            {showRules && (
-              <p className="mt-2 rounded-lg bg-primary/10 p-3 text-sm text-foreground/90">{station.rules}</p>
-            )}
-          </div>
-        )}
 
-        {participants.length === 0 ? (
-          <p className="italic text-muted-foreground">Ei osallistujia kisassa vielä.</p>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Pelaaja</TableHead>
-                <TableHead className="w-24 text-right">Pisteet</TableHead>
-                <TableHead className="w-24 text-right">Tyyli ✨</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {participants.map((p) => {
-                const r = results[p.id] ?? { points: "", style_points: "" };
-                return (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-medium">{p.display_name}</TableCell>
-                    <TableCell className="text-right">
-                      <Input type="number" inputMode="numeric" disabled={locked} value={r.points ?? ""}
-                        onChange={(e) => save(p.id, "points", e.target.value)}
-                        className="ml-auto h-9 w-20 text-center" />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Input type="number" inputMode="numeric" disabled={locked} value={r.style_points ?? ""}
-                        onChange={(e) => save(p.id, "style_points", e.target.value)}
-                        className="ml-auto h-9 w-20 text-center" />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        )}
+      {open && (
+        <CardContent className="flex flex-col gap-3 pb-5">
+          {station.description && <p className="text-sm text-muted-foreground">{station.description}</p>}
 
-        {user.isAdmin && (
-          <Button size="sm" variant="outline" className="self-start" onClick={toggleLock}>
-            {station.is_locked ? <><Unlock className="size-4" /> Avaa rastin lukitus</> : <><Lock className="size-4" /> Lukitse rasti</>}
-          </Button>
-        )}
-        {locked && !station.is_locked && (
-          <p className="text-sm italic text-muted-foreground">Kisa on lukittu – pisteitä ei voi muokata.</p>
-        )}
-      </CardContent>
+          {station.rules && (
+            <div>
+              <button onClick={() => setShowRules((v) => !v)}
+                className="flex items-center gap-1.5 text-sm font-medium text-primary cursor-pointer">
+                {showRules ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+                <BookOpen className="size-3.5" /> Säännöt
+              </button>
+              {showRules && (
+                <p className="mt-2 rounded-lg bg-primary/10 p-3 text-sm text-foreground/90">{station.rules}</p>
+              )}
+            </div>
+          )}
+
+          {participants.length === 0 ? (
+            <p className="italic text-muted-foreground">Ei osallistujia kisassa vielä.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Pelaaja</TableHead>
+                  <TableHead className="w-24 text-right">Pisteet</TableHead>
+                  <TableHead className="w-24 text-right">Tyyli ✨</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {participants.map((p) => {
+                  const r = results[p.id] ?? { points: "", style_points: "" };
+                  return (
+                    <TableRow key={p.id}>
+                      <TableCell className="font-medium">{p.display_name}</TableCell>
+                      <TableCell className="text-right">
+                        <Input type="number" inputMode="numeric" disabled={readOnly} value={r.points ?? ""}
+                          onChange={(e) => save(p.id, "points", e.target.value)}
+                          className="ml-auto h-9 w-20 text-center" />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Input type="number" inputMode="numeric" disabled={readOnly} value={r.style_points ?? ""}
+                          onChange={(e) => save(p.id, "style_points", e.target.value)}
+                          className="ml-auto h-9 w-20 text-center" />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
+
+          {isAdmin && (
+            <Button size="sm" variant="outline" className="self-start" onClick={toggleLock}>
+              {station.is_locked ? <><Unlock className="size-4" /> Avaa rastin lukitus</> : <><Lock className="size-4" /> Lukitse rasti</>}
+            </Button>
+          )}
+          {locked && !station.is_locked && (
+            <p className="text-sm italic text-muted-foreground">Kisa on lukittu – pisteitä ei voi muokata.</p>
+          )}
+          {!user && !locked && (
+            <p className="text-sm italic text-muted-foreground">Kirjaudu sisään syöttääksesi pisteitä.</p>
+          )}
+        </CardContent>
+      )}
     </Card>
   );
 }

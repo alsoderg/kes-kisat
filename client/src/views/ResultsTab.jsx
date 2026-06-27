@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { api } from "../api";
+import { useUrlParam } from "../useUrlState.js";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,7 +11,7 @@ const medals = ["🥇", "🥈", "🥉"];
 export default function ResultsTab() {
   const [overall, setOverall] = useState([]);
   const [competitions, setCompetitions] = useState([]);
-  const [selectedComp, setSelectedComp] = useState("");
+  const [selectedComp, setSelectedComp] = useUrlParam("rcomp", "");
   const [compStandings, setCompStandings] = useState([]);
   const [stations, setStations] = useState([]);
   const [openStation, setOpenStation] = useState(null);
@@ -21,16 +22,16 @@ export default function ResultsTab() {
     api.get("/competitions").then(setCompetitions);
   }, []);
 
-  async function pickComp(id) {
-    setSelectedComp(id);
+  // Lataa valitun kisan tiedot kun URL-parametri muuttuu (myös suoraan linkistä)
+  useEffect(() => {
     setOpenStation(null);
-    if (!id) { setCompStandings([]); setStations([]); return; }
-    const [st, s] = await Promise.all([
-      api.get(`/stats/competitions/${id}/standings`),
-      api.get(`/competitions/${id}/stations`),
-    ]);
-    setCompStandings(st); setStations(s);
-  }
+    if (!selectedComp) { setCompStandings([]); setStations([]); return; }
+    Promise.all([
+      api.get(`/stats/competitions/${selectedComp}/standings`),
+      api.get(`/competitions/${selectedComp}/stations`),
+    ]).then(([st, s]) => { setCompStandings(st); setStations(s); })
+      .catch(() => { setCompStandings([]); setStations([]); });
+  }, [selectedComp]);
 
   async function openStationResults(stationId) {
     if (openStation === stationId) { setOpenStation(null); return; }
@@ -43,7 +44,7 @@ export default function ResultsTab() {
       <Card>
         <CardHeader><CardTitle>Kisakohtaiset tulokset 🏁</CardTitle></CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <Select value={selectedComp} onValueChange={pickComp}>
+          <Select value={selectedComp} onValueChange={setSelectedComp}>
             <SelectTrigger><SelectValue placeholder="Valitse kisa…" /></SelectTrigger>
             <SelectContent>
               {competitions.map((c) => (

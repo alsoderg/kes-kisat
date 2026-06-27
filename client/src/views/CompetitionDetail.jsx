@@ -1,24 +1,37 @@
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, MapPin, Clock, Users, Lock, Unlock, Megaphone, PartyPopper, Plus } from "lucide-react";
+import { ArrowLeft, MapPin, Clock, Users, Lock, Unlock, Megaphone, PartyPopper, Plus, Pencil, Trash2 } from "lucide-react";
 import { api } from "../api";
 import { useAuth } from "../auth.jsx";
 import StationCard from "./StationCard.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const medals = ["🥇", "🥈", "🥉"];
 
+function toLocalInput(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export default function CompetitionDetail({ competitionId, onBack }) {
   const { user } = useAuth();
+  const isAdmin = !!user?.isAdmin;
   const [comp, setComp] = useState(null);
   const [stations, setStations] = useState([]);
   const [standings, setStandings] = useState([]);
   const [eventTypes, setEventTypes] = useState([]);
   const [newStationEvent, setNewStationEvent] = useState("");
   const [error, setError] = useState("");
+
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({ name: "", location: "", description: "", startTime: "" });
 
   const load = useCallback(async () => {
     const [c, s, st] = await Promise.all([
@@ -31,12 +44,12 @@ export default function CompetitionDetail({ competitionId, onBack }) {
 
   useEffect(() => {
     load();
-    if (user.isAdmin) api.get("/event-types").then(setEventTypes);
-  }, [load, user.isAdmin]);
+    if (isAdmin) api.get("/event-types").then(setEventTypes);
+  }, [load, isAdmin]);
 
   if (!comp) return <p className="italic text-muted-foreground">Ladataan…</p>;
 
-  const isParticipant = comp.participants.some((p) => p.id === user.id);
+  const isParticipant = comp.participants.some((p) => p.id === user?.id);
   const locked = comp.is_locked;
 
   async function toggleJoin() {
@@ -47,6 +60,36 @@ export default function CompetitionDetail({ competitionId, onBack }) {
   async function toggleLock() {
     await api.patch(`/competitions/${competitionId}`, { isLocked: !locked });
     load();
+  }
+  function startEdit() {
+    setForm({
+      name: comp.name,
+      location: comp.location ?? "",
+      description: comp.description ?? "",
+      startTime: toLocalInput(comp.start_time),
+    });
+    setEditing(true);
+  }
+  async function saveEdit(e) {
+    e.preventDefault();
+    setError("");
+    try {
+      await api.patch(`/competitions/${competitionId}`, {
+        name: form.name,
+        location: form.location,
+        description: form.description,
+        startTime: form.startTime || null,
+      });
+      setEditing(false);
+      load();
+    } catch (err) { setError(err.message); }
+  }
+  async function deleteCompetition() {
+    if (!window.confirm(`Poistetaanko kisa "${comp.name}" ja kaikki sen rastit ja tulokset? Tätä ei voi perua.`)) return;
+    try {
+      await api.del(`/competitions/${competitionId}`);
+      onBack();
+    } catch (err) { alert(err.message); }
   }
   async function addStation() {
     setError("");
@@ -80,7 +123,7 @@ export default function CompetitionDetail({ competitionId, onBack }) {
               {locked && <Lock className="size-4 text-muted-foreground" />}
               {comp.name}
             </CardTitle>
-            {!locked && (
+            {user && !locked && (
               <Button size="sm" variant={isParticipant ? "outline" : "default"} onClick={toggleJoin}>
                 {isParticipant ? "Poistu kisasta" : "Liity kisaan"}
               </Button>
@@ -88,21 +131,47 @@ export default function CompetitionDetail({ competitionId, onBack }) {
           </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-2 text-sm text-muted-foreground">
+          {comp.description && <p className="text-foreground/80">{comp.description}</p>}
           {comp.location && <span className="flex items-center gap-1.5"><MapPin className="size-4" />{comp.location}</span>}
           {comp.start_time && <span className="flex items-center gap-1.5"><Clock className="size-4" />{new Date(comp.start_time).toLocaleString("fi-FI")}</span>}
           <span className="flex items-center gap-1.5"><Users className="size-4" />{comp.participants.length} osallistujaa</span>
 
-          {user.isAdmin && (
+          {isAdmin && (
             <div className="mt-2 flex flex-wrap gap-2">
               <Button size="sm" variant="secondary" onClick={toggleLock}>
                 {locked ? <><Unlock className="size-4" /> Avaa lukitus</> : <><Lock className="size-4" /> Lukitse kisa</>}
               </Button>
+              <Button size="sm" variant="secondary" onClick={startEdit}><Pencil className="size-4" /> Muokkaa</Button>
               <Button size="sm" variant="secondary" onClick={shareStandings}><Megaphone className="size-4" /> Jaa tilanne</Button>
               {comp.start_time && <Button size="sm" variant="secondary" onClick={announceStart}><PartyPopper className="size-4" /> Ilmoita aika</Button>}
+              <Button size="sm" variant="destructive" onClick={deleteCompetition}><Trash2 className="size-4" /> Poista kisa</Button>
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Admin: muokkauslomake */}
+      {isAdmin && editing && (
+        <Card>
+          <CardHeader><CardTitle>Muokkaa kisaa</CardTitle></CardHeader>
+          <CardContent>
+            <form onSubmit={saveEdit} className="flex flex-col gap-3">
+              <Input placeholder="Kisan nimi" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <Input placeholder="Paikka" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
+              <Textarea placeholder="Kuvaus" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} />
+              <Label className="flex-col items-start gap-1.5">
+                Alkamisaika
+                <Input type="datetime-local" value={form.startTime} onChange={(e) => setForm({ ...form, startTime: e.target.value })} />
+              </Label>
+              {error && <p className="text-sm text-destructive">{error}</p>}
+              <div className="flex gap-2">
+                <Button type="submit" className="flex-1">Tallenna</Button>
+                <Button type="button" variant="outline" onClick={() => setEditing(false)}>Peruuta</Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader><CardTitle>Kisan tilanne 🏆</CardTitle></CardHeader>
@@ -136,7 +205,7 @@ export default function CompetitionDetail({ competitionId, onBack }) {
         </CardContent>
       </Card>
 
-      {user.isAdmin && (
+      {isAdmin && (
         <Card>
           <CardHeader><CardTitle>Lisää rasti kisaan</CardTitle></CardHeader>
           <CardContent className="flex flex-col gap-3">
@@ -151,7 +220,7 @@ export default function CompetitionDetail({ competitionId, onBack }) {
               </Select>
               <Button onClick={addStation} disabled={!newStationEvent}><Plus className="size-4" /> Lisää</Button>
             </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {error && !editing && <p className="text-sm text-destructive">{error}</p>}
           </CardContent>
         </Card>
       )}

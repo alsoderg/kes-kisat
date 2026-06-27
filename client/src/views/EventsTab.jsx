@@ -43,7 +43,7 @@ export default function EventsTab() {
 
   return (
     <div className="flex flex-col gap-4">
-      {user.isAdmin && (
+      {user?.isAdmin && (
         <Card>
           <CardHeader><CardTitle>Lisää laji katalogiin</CardTitle></CardHeader>
           <CardContent>
