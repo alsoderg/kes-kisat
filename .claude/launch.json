@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "kesakisat",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start"],
+      "port": 3001
+    },
+    {
+      "name": "404-page",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["http-server", "server/public", "-p", "3456"],
+      "port": 3456
+    }
+  ]
+}

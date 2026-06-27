@@ -1,16 +1,54 @@
-# React + Vite
+# Allun Kesäkisat 🏆☀️
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Kisojen, rastien ja tulosten hallinta. React-frontend + Express/Postgres-backend, joka
+tarjoilee molemmat samasta osoitteesta. Suunniteltu omalle palvelimelle (Hetzner).
 
-Currently, two official plugins are available:
+## Rakenne (monorepo / npm workspaces)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```
+client/   React + Vite -frontend (buildautuu server/public:iin)
+server/   Express + Postgres + JWT-auth
+deploy/   systemd-yksikkö ja palvelimen pystytysohjeet
+scripts/  deploy.mjs (SSH-deploy)
+```
 
-## React Compiler
+## Tietomalli
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **users** – itserekisteröinti, salasana (bcrypt), näyttönimi, teema, `is_admin`
+- **event_types** – globaali lajikatalogi (esim. Mölkky) + oletussäännöt
+- **competitions** – kisat (alkamisaika, paikka, lukitus)
+- **competition_stations** – laji kytkettynä kisaan (lukitus, järjestys, sääntöjen ohitus)
+- **results** – pisteet + tyylipisteet; kuuluvat aina rastiin, kisaan ja käyttäjään
+- **app_settings** – mm. Discord-webhook (pysyy palvelimella)
 
-## Expanding the ESLint configuration
+Tilastot kolmella/neljällä tasolla: rastikohtainen, kisakohtainen, lajikohtainen (yli kisojen) ja kokonais.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Paikallinen kehitys
+
+```bash
+# 1. Postgres käyntiin (esim. Docker)
+docker run -d --name kesakisat-db -e POSTGRES_USER=kesakisat \
+  -e POSTGRES_PASSWORD=kesakisat -e POSTGRES_DB=kesakisat -p 5432:5432 postgres:16
+
+# 2. Riippuvuudet
+npm install
+
+# 3. Ympäristömuuttujat
+cp server/.env.example server/.env   # täytä DATABASE_URL, JWT_SECRET
+
+# 4. Tietokanta
+npm run db:migrate
+npm run db:import                    # tuo varmuuskopion (käyttäjät, kisa, rastit, tulokset)
+
+# 5. Käynnistä (server :3001 + client :5173, vite proxaa /api -> :3001)
+npm run dev
+```
+
+## Tuotanto
+
+```bash
+npm run build     # buildaa clientin server/public:iin
+npm run start     # käynnistää palvelimen, joka tarjoilee myös frontin
+```
+
+Palvelimen pystytys ja deploy: katso [deploy/README.md](deploy/README.md).
